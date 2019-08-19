@@ -389,23 +389,25 @@ namespace :rubber do
 
     env = rubber_cfg.environment.bind(instance_item.role_names, instance_alias)
 
-    instance = cloud.describe_instances(instance_item.instance_id).first
+    instance = cloud.describe_instances(instance_item.instance_id).first unless env['aws_refresh_without_key']
 
     monitor.synchronize do
       cloud.before_refresh_instance(instance_item)
     end
 
-    if instance[:state] == cloud.active_state
+    if env['aws_refresh_without_key'] || instance[:state] == cloud.active_state
       print "\n"
       logger.info "Instance running, fetching hostname/ip data"
-      instance_item.external_host = instance[:external_host]
-      instance_item.external_ip = instance[:external_ip]
-      instance_item.internal_host = instance[:internal_host]
-      instance_item.internal_ip = instance[:internal_ip]
-      instance_item.zone = instance[:zone]
-      instance_item.provider = instance[:provider]
-      instance_item.platform = instance[:platform]
-      instance_item.root_device_type = instance[:root_device_type]
+      unless env['aws_refresh_without_key']
+        instance_item.external_host = instance[:external_host]
+        instance_item.external_ip = instance[:external_ip]
+        instance_item.internal_host = instance[:internal_host]
+        instance_item.internal_ip = instance[:internal_ip]
+        instance_item.zone = instance[:zone]
+        instance_item.provider = instance[:provider]
+        instance_item.platform = instance[:platform]
+        instance_item.root_device_type = instance[:root_device_type]
+      end
       rubber_instances.save()
 
       if instance_item.linux?

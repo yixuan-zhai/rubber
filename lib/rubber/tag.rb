@@ -5,7 +5,7 @@ module Rubber
       instance_item = Rubber.instances[instance_alias]
       raise "Instance does not exist: #{instance_alias}" if ! instance_item
 
-      Rubber.cloud.create_tags(instance_item.instance_id, :Name => instance_alias, :Environment => Rubber.env)
+      Rubber.cloud.create_tags(instance_item.instance_id, :Name => instance_alias, :Environment => Rubber.env) unless Rubber.config['aws_refresh_without_key']
     end
   end
 end

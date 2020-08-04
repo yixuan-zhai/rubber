@@ -9,6 +9,7 @@ require 'capistrano/thread_safety_fix'
 require 'capistrano/find_servers_for_task_fix'
 require 'pp'
 require 'rubber'
+require 'net/ssh/proxy/command'
 
 namespace :rubber do
 
@@ -132,6 +133,9 @@ namespace :rubber do
 
     # Set the net-ssh log level.
     ssh_options[:verbose] = fetch(:ssh_log_level, :warn)
+  
+    # Bastion config
+    ssh_options[:proxy] = Net::SSH::Proxy::Command.new("ssh -W %h:%p #{rubber_env[Rubber.env].bastion_user}@#{rubber_env[Rubber.env].bastion_ip} -i ~/.ec2/#{rubber_env[Rubber.env].bastion_keypair} ") if rubber_env[Rubber.env].bastion_enabled
   end
 
 

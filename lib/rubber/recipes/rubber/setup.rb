@@ -268,6 +268,15 @@ namespace :rubber do
 
       replace="#{delim}\\n#{remote_hosts.join("\\n")}\\n#{delim}"
 
+      # Write to /etc/hosts file in bastion if needed
+      if rubber_env[Rubber.env].bastion_enabled
+        Net::SSH.start(rubber_env[Rubber.env].bastion_ip, rubber_env[Rubber.env].bastion_user, :host_key => "ssh-rsa",:keys => [ "~/.ec2/#{rubber_env[Rubber.env].bastion_keypair}" ]) do |ssh|
+          ssh.exec!("sudo sed -i.bak '/#{delim}/,/#{delim}/c #{replace}' /etc/hosts")
+          command = "if ! grep -q '#{delim}' /etc/hosts; then echo -e '#{replace}' >> /etc/hosts; fi"
+          ssh.exec!("sudo bash -c \"#{command}\"")
+        end
+      end
+
       setup_remote_aliases_script = <<-ENDSCRIPT
         sed -i.bak '/#{delim}/,/#{delim}/c #{replace}' /etc/hosts
         if ! grep -q "#{delim}" /etc/hosts; then
